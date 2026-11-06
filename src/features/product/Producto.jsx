@@ -1,0 +1,645 @@
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import Button from '../../shared/ui/Button';
+import { TEMPUSCARE_URL } from '../../shared/data/data';
+import { useScrollReveal } from '../../shared/hooks/useScrollReveal';
+import {
+  FileText,
+  Ear,
+  MapPin,
+  ShieldCheck,
+  Building2,
+  Columns3,
+  CheckCircle2,
+  Volume2,
+  Keyboard,
+  Contrast,
+  PauseCircle,
+  Star,
+  ExternalLink,
+  SlidersHorizontal
+} from 'lucide-react';
+
+const SEDES_TUCUMAN = [
+  {
+    id: 'smt-norte',
+    nombre: 'Policlínico Barrio Norte',
+    zona: '25 de Mayo 640 · SMT',
+    coords: { top: '36%', left: '54%' },
+    profesionales: 18,
+    puntualidad: 97,
+    atencion: 98,
+    profesionalismo: 99,
+  },
+  {
+    id: 'yerba-buena',
+    nombre: 'Centro Médico Yerba Buena',
+    zona: 'Av. Aconquija 1850 · YB',
+    coords: { top: '48%', left: '28%' },
+    profesionales: 12,
+    puntualidad: 96,
+    atencion: 99,
+    profesionalismo: 98,
+  },
+  {
+    id: 'smt-sur',
+    nombre: 'Consultorios Parque Sur',
+    zona: 'Av. Roca 1420 · SMT',
+    coords: { top: '68%', left: '58%' },
+    profesionales: 9,
+    puntualidad: 95,
+    atencion: 97,
+    profesionalismo: 99,
+  }
+];
+
+export default function Producto() {
+  const revealRef = useScrollReveal();
+
+  // Estados interactivos para los Bentos
+  const [selectedSedeAgenda, setSelectedSedeAgenda] = useState('Todas las sedes (Unificado)');
+  const [hceFilter, setHceFilter] = useState('todos');
+  const [allowUnlistedOS, setAllowUnlistedOS] = useState(true);
+  const [selectedMapPin, setSelectedMapPin] = useState(SEDES_TUCUMAN[0]);
+
+  // Estados de accesibilidad interactiva en Bento 4
+  const [isMotionReduced, setIsMotionReduced] = useState(false);
+  const [isHighContrastActive, setIsHighContrastActive] = useState(false);
+  const [screenReaderActive, setScreenReaderActive] = useState(false);
+  const [keyboardNavActive, setKeyboardNavActive] = useState(false);
+
+  useEffect(() => {
+    const checkState = () => {
+      const root = document.documentElement;
+      setIsMotionReduced(root.classList.contains('reduce-motion') || root.classList.contains('pause-animations'));
+      setIsHighContrastActive(root.classList.contains('high-contrast'));
+    };
+    checkState();
+
+    const handleReduceMotion = (e) => {
+      setIsMotionReduced(Boolean(e.detail?.isReducedMotion));
+    };
+    const handleHighContrast = (e) => {
+      setIsHighContrastActive(Boolean(e.detail?.highContrast));
+    };
+
+    window.addEventListener('vitality:reduce-motion', handleReduceMotion);
+    window.addEventListener('vitality:high-contrast', handleHighContrast);
+
+    return () => {
+      window.removeEventListener('vitality:reduce-motion', handleReduceMotion);
+      window.removeEventListener('vitality:high-contrast', handleHighContrast);
+    };
+  }, []);
+
+  const toggleReduceMotion = () => {
+    const root = document.documentElement;
+    const isNowReduced = !isMotionReduced;
+    if (isNowReduced) {
+      root.classList.add('reduce-motion');
+      root.classList.add('pause-animations');
+    } else {
+      root.classList.remove('reduce-motion');
+      root.classList.remove('pause-animations');
+    }
+    setIsMotionReduced(isNowReduced);
+    window.dispatchEvent(new CustomEvent('vitality:reduce-motion', { detail: { isReducedMotion: isNowReduced } }));
+  };
+
+  const toggleHighContrast = () => {
+    const root = document.documentElement;
+    const isNowHC = !isHighContrastActive;
+    if (isNowHC) {
+      root.classList.add('high-contrast');
+    } else {
+      root.classList.remove('high-contrast');
+    }
+    setIsHighContrastActive(isNowHC);
+    window.dispatchEvent(new CustomEvent('vitality:high-contrast', { detail: { highContrast: isNowHC } }));
+  };
+
+  const toggleScreenReader = () => {
+    setScreenReaderActive((prev) => !prev);
+  };
+
+  const toggleKeyboardNav = () => {
+    setKeyboardNavActive((prev) => !prev);
+  };
+
+  return (
+    <section id="producto" className="py-24 bg-background-light relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" ref={revealRef}>
+        
+        {/* Encabezado de Producto (Sin etiquetas técnicas) */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-14 gap-6">
+          <div className="max-w-3xl">
+            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-primary tracking-tight leading-tight">
+              TempusCare: nuestra solución integral para la{' '}
+              <span className="font-serif italic font-normal text-accent text-4xl sm:text-5xl md:text-[3.5rem]">
+                salud privada
+              </span>
+            </h2>
+            <p className="mt-4 text-base sm:text-lg text-text-muted leading-relaxed">
+              Explorá los 5 módulos diseñados en nuestra plataforma para conectar pacientes, secretarías y médicos en toda la provincia de Tucumán.
+            </p>
+          </div>
+
+          <div className="shrink-0">
+            <a
+              href={TEMPUSCARE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="primary" className="gap-2">
+                <span>Ver la plataforma</span>
+                <ExternalLink size={17} />
+              </Button>
+            </a>
+          </div>
+        </div>
+
+        {/* BENTO GRID ASIMÉTRICO DE 5 TARJETAS INTERACTIVAS */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* =========================================================
+              BENTO 1: Turnero Multi-Institucional y Gestión en Espera (7 cols)
+             ========================================================= */}
+          <motion.article
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.25 }}
+            className="hc-card lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl border border-gray-200/80 flex flex-col justify-between transition-shadow"
+          >
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary">
+                  <Columns3 size={15} className="text-primary" />
+                  Módulo 01 · Agenda & Recepción
+                </span>
+                <span className="text-xs font-medium text-text-muted">
+                  Sin superposición de turnos
+                </span>
+              </div>
+
+              <h3 className="font-heading text-xl sm:text-2xl font-extrabold text-primary mb-2">
+                Turnero Multi-Institucional y Gestión de Pacientes en Espera
+              </h3>
+              <p className="text-sm sm:text-base text-text-muted mb-6 leading-relaxed">
+                Un mismo profesional atiende en distintos consultorios y clínicas sin superponer horarios. Secretaría gestiona el flujo diario con recepción en vivo y carga rápida de sobreturnos.
+              </p>
+
+              {/* Selector interactivo de institución */}
+              <div className="bg-background-light p-3.5 rounded-2xl border border-gray-200/80 mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                    <Building2 size={15} className="text-accent" />
+                    Convivencia de Agendas por Sede:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['Todas las sedes (Unificado)', 'Sede SMT Centro', 'Sede Yerba Buena'].map((sede) => (
+                      <button
+                        key={sede}
+                        type="button"
+                        onClick={() => setSelectedSedeAgenda(sede)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                          selectedSedeAgenda === sede
+                            ? 'bg-primary text-white shadow-2xs'
+                            : 'bg-white text-text-muted border border-gray-200 hover:border-accent'
+                        }`}
+                      >
+                        {sede}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mini flujo de recepción en vivo + Bloques horarios */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div className="bg-white p-3 rounded-xl border border-gray-200/80">
+                    <div className="flex items-center justify-between text-xs font-bold text-amber-700 mb-1.5">
+                      <span>● En Espera (3)</span>
+                      <span className="text-[10px] bg-amber-50 px-1.5 py-0.5 rounded">Secretaría</span>
+                    </div>
+                    <p className="text-xs font-bold text-primary">09:00 · A. Mansilla</p>
+                    <p className="text-[11px] text-text-muted">Sede SMT · Subsidio</p>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl border border-blue-200">
+                    <div className="flex items-center justify-between text-xs font-bold text-secondary mb-1.5">
+                      <span>● En Consulta (1)</span>
+                      <span className="text-[10px] bg-blue-50 px-1.5 py-0.5 rounded">Box 2</span>
+                    </div>
+                    <p className="text-xs font-bold text-primary">08:45 · L. Paz</p>
+                    <p className="text-[11px] text-text-muted">Sede SMT · OSDE</p>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl border border-emerald-200">
+                    <div className="flex items-center justify-between text-xs font-bold text-emerald-700 mb-1.5">
+                      <span>● Tarde (Sede YB)</span>
+                      <span className="text-[10px] bg-emerald-50 px-1.5 py-0.5 rounded">16:00-20:00</span>
+                    </div>
+                    <p className="text-xs font-bold text-primary">Agenda Yerba Buena</p>
+                    <p className="text-[11px] text-text-muted">8 turnos confirmados</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-text-muted pt-3 border-t border-gray-100">
+              <span>Vista activa: <strong className="text-primary">{selectedSedeAgenda}</strong></span>
+              <span className="font-bold text-accent">Sincronización en tiempo real</span>
+            </div>
+          </motion.article>
+
+          {/* =========================================================
+              BENTO 2: Historia Clínica Unificada y Línea de Tiempo (5 cols)
+             ========================================================= */}
+          <motion.article
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.25 }}
+            className="hc-card lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl border border-gray-200/80 flex flex-col justify-between transition-shadow"
+          >
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary">
+                  <FileText size={15} className="text-primary" />
+                  Módulo 02 · Historia Clínica
+                </span>
+                <div className="flex gap-1">
+                  {[
+                    { id: 'todos', label: 'Todo' },
+                    { id: 'evolucion', label: 'Clínica' },
+                    { id: 'estudios', label: 'Estudios' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setHceFilter(tab.id)}
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition-colors ${
+                        hceFilter === tab.id
+                          ? 'bg-accent text-white'
+                          : 'bg-background-light text-text-muted hover:text-primary'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <h3 className="font-heading text-xl sm:text-2xl font-extrabold text-primary mb-2">
+                Historia Clínica Unificada y Línea de Tiempo
+              </h3>
+              <p className="text-sm text-text-muted mb-5 leading-relaxed">
+                Trazabilidad longitudinal de evoluciones médicas, signos vitales y estudios adjuntos por paciente a través de la Línea de Tiempo del Paciente.
+              </p>
+
+              {/* Línea de tiempo interactiva */}
+              <div className="space-y-3 pl-2">
+                {(hceFilter === 'todos' || hceFilter === 'evolucion') && (
+                  <div className="relative pl-5 border-l-2 border-accent">
+                    <span className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-accent border-2 border-white"></span>
+                    <div className="bg-background-light p-3 rounded-xl border border-gray-200/70">
+                      <div className="flex justify-between text-xs font-bold text-primary">
+                        <span>Evolución Cardiológica</span>
+                        <span className="text-accent">24 Oct · SMT</span>
+                      </div>
+                      <p className="text-xs text-text-muted mt-1">
+                        TA: 120/78 mmHg · FC: 68 lpm. Paciente asintomático con adherencia completa.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {(hceFilter === 'todos' || hceFilter === 'estudios') && (
+                  <div className="relative pl-5 border-l-2 border-secondary/50">
+                    <span className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-secondary border-2 border-white"></span>
+                    <div className="bg-background-light p-3 rounded-xl border border-gray-200/70">
+                      <div className="flex justify-between text-xs font-bold text-primary">
+                        <span>Laboratorio + Holter 24hs.pdf</span>
+                        <span className="text-secondary">10 Sep · Yerba Buena</span>
+                      </div>
+                      <p className="text-xs text-text-muted mt-1">
+                        Ritmo sinusal permanente. Colesterol LDL dentro de objetivos terapéuticos.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-text-muted">
+              <span className="flex items-center gap-1 font-medium text-primary">
+                <ShieldCheck size={14} className="text-accent" />
+                Registro seguro con firma de profesional
+              </span>
+              <span className="font-bold">Ley 26.529</span>
+            </div>
+          </motion.article>
+
+          {/* =========================================================
+              BENTO 3: Parametrización de Obras Sociales (4 cols)
+             ========================================================= */}
+          <motion.article
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.25 }}
+            className="hc-card lg:col-span-4 bg-white rounded-3xl p-6 sm:p-7 shadow-sm hover:shadow-xl border border-gray-200/80 flex flex-col justify-between transition-shadow"
+          >
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary">
+                  <SlidersHorizontal size={15} className="text-primary" />
+                  Módulo 03 · Coberturas
+                </span>
+              </div>
+
+              <h3 className="font-heading text-xl font-extrabold text-primary mb-2">
+                Parametrización de Obras Sociales
+              </h3>
+              <p className="text-sm text-text-muted mb-4 leading-relaxed">
+                Configuración flexible de convenios por profesional. El filtro orienta al paciente sobre su cobertura pero <strong>nunca bloquea</strong> la reserva particular.
+              </p>
+
+              {/* Grilla de Obras Sociales de Tucumán */}
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {[
+                  { name: 'Subsidio de Salud', state: 'Convenio Activo' },
+                  { name: 'PAMI', state: '100% Cubierto' },
+                  { name: 'OSDE', state: 'Validación Online' },
+                  { name: 'Swiss Medical', state: 'Activo' },
+                  { name: 'Prensa', state: 'Coseguro' },
+                  { name: 'Particular', state: 'Arancel Preferencial' },
+                ].map((os, i) => (
+                  <div
+                    key={i}
+                    className="px-2.5 py-1.5 rounded-xl bg-background-light border border-gray-200/80 text-xs flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 size={13} className="text-accent shrink-0" />
+                    <span className="font-bold text-primary">{os.name}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Switch interactivo de Filtro sin Bloqueo */}
+              <div className="p-3 rounded-2xl bg-accent/10 border border-accent/25 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-primary">Filtro Opcional sin Bloqueo</p>
+                  <p className="text-[11px] text-text-muted">
+                    {allowUnlistedOS
+                      ? 'Permite reservar avisando modalidad Particular / Copago'
+                      : 'Mostrando únicamente convenios directos'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={allowUnlistedOS}
+                  onClick={() => setAllowUnlistedOS(!allowUnlistedOS)}
+                  className={`w-11 h-6 rounded-full transition-colors p-0.5 cursor-pointer shrink-0 ${
+                    allowUnlistedOS ? 'bg-accent' : 'bg-gray-300'
+                  }`}
+                  aria-label="Alternar filtro opcional sin bloqueo"
+                >
+                  <span
+                    className={`block w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${
+                      allowUnlistedOS ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-text-muted flex justify-between">
+              <span>Transparencia arancelaria</span>
+              <span className="font-bold text-primary">0% rechazos en recepción</span>
+            </div>
+          </motion.article>
+
+          {/* =========================================================
+              BENTO 4: Accesibilidad Nativa Real (4 cols) - Controles Limpios
+             ========================================================= */}
+          <motion.article
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.25 }}
+            className="hc-card lg:col-span-4 bg-gradient-to-br from-primary to-secondary text-white rounded-3xl p-6 sm:p-7 shadow-lg hover:shadow-2xl border border-primary/20 flex flex-col justify-between transition-shadow"
+          >
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-white">
+                  <Ear size={15} className="text-accent-light" />
+                  Módulo 04 · Diferencial de Inclusión
+                </span>
+                <span className="text-xs font-bold text-accent-light">
+                  WCAG 2.1 AAA
+                </span>
+              </div>
+
+              <h3 className="font-heading text-xl font-extrabold text-white mb-2">
+                Accesibilidad Nativa Real
+              </h3>
+              <p className="text-sm text-blue-100 mb-5 leading-relaxed">
+                Diseñada desde la base para personas mayores y usuarios con discapacidad visual, auditiva o motriz. Controles limpios en vivo:
+              </p>
+
+              {/* Botones y controles interactivos limpios y directos (Sin cartel descriptivo) */}
+              <div className="grid grid-cols-2 gap-2.5 mb-4">
+                {/* 1. Pausar Animaciones / Reducción de Movimiento */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={isMotionReduced}
+                  onClick={toggleReduceMotion}
+                  className={`p-3 rounded-2xl text-left text-xs font-bold transition-all cursor-pointer flex flex-col gap-1.5 border ${
+                    isMotionReduced
+                      ? 'bg-white text-primary border-white shadow-lg ring-2 ring-accent'
+                      : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <PauseCircle size={18} className={isMotionReduced ? 'text-accent' : 'text-accent-light'} />
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${isMotionReduced ? 'bg-primary text-white' : 'bg-white/20 text-white'}`}>
+                      {isMotionReduced ? 'Activo ✓' : 'Probar'}
+                    </span>
+                  </div>
+                  <span className="leading-tight">Pausar Animaciones</span>
+                </button>
+
+                {/* 2. Alto Contraste AAA */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={isHighContrastActive}
+                  onClick={toggleHighContrast}
+                  className={`p-3 rounded-2xl text-left text-xs font-bold transition-all cursor-pointer flex flex-col gap-1.5 border ${
+                    isHighContrastActive
+                      ? 'bg-white text-primary border-white shadow-lg ring-2 ring-accent'
+                      : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <Contrast size={18} className={isHighContrastActive ? 'text-accent' : 'text-accent-light'} />
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${isHighContrastActive ? 'bg-primary text-white' : 'bg-white/20 text-white'}`}>
+                      {isHighContrastActive ? 'Activo ✓' : 'Probar'}
+                    </span>
+                  </div>
+                  <span className="leading-tight">Alto Contraste</span>
+                </button>
+
+                {/* 3. Lector de Pantalla */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={screenReaderActive}
+                  onClick={toggleScreenReader}
+                  className={`p-3 rounded-2xl text-left text-xs font-bold transition-all cursor-pointer flex flex-col gap-1.5 border ${
+                    screenReaderActive
+                      ? 'bg-white text-primary border-white shadow-lg ring-2 ring-accent'
+                      : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <Volume2 size={18} className={screenReaderActive ? 'text-accent' : 'text-accent-light'} />
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${screenReaderActive ? 'bg-primary text-white' : 'bg-white/20 text-white'}`}>
+                      {screenReaderActive ? 'Activo ✓' : 'Probar'}
+                    </span>
+                  </div>
+                  <span className="leading-tight">Lector de Pantalla</span>
+                </button>
+
+                {/* 4. Navegación por Teclado */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={keyboardNavActive}
+                  onClick={toggleKeyboardNav}
+                  className={`p-3 rounded-2xl text-left text-xs font-bold transition-all cursor-pointer flex flex-col gap-1.5 border ${
+                    keyboardNavActive
+                      ? 'bg-white text-primary border-white shadow-lg ring-2 ring-accent'
+                      : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <Keyboard size={18} className={keyboardNavActive ? 'text-accent' : 'text-accent-light'} />
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${keyboardNavActive ? 'bg-primary text-white' : 'bg-white/20 text-white'}`}>
+                      {keyboardNavActive ? 'Activo ✓' : 'Probar'}
+                    </span>
+                  </div>
+                  <span className="leading-tight">Navegación Teclado</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-white/15 text-xs text-blue-100 flex justify-between">
+              <span>Widget disponible abajo a la izquierda ↙</span>
+              <span className="font-bold text-accent-light">100% Inclusivo</span>
+            </div>
+          </motion.article>
+
+          {/* =========================================================
+              BENTO 5: Geolocalización y Encuestas Verificadas (4 cols)
+             ========================================================= */}
+          <motion.article
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.25 }}
+            className="hc-card lg:col-span-4 bg-white rounded-3xl p-6 sm:p-7 shadow-sm hover:shadow-xl border border-gray-200/80 flex flex-col justify-between transition-shadow"
+          >
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary">
+                  <MapPin size={15} className="text-primary" />
+                  Módulo 05 · Sedes & Opiniones
+                </span>
+                <span className="text-xs font-bold text-amber-600 flex items-center gap-1">
+                  <Star size={13} className="fill-amber-400 text-amber-400" />
+                  Verificado
+                </span>
+              </div>
+
+              <h3 className="font-heading text-xl font-extrabold text-primary mb-2">
+                Geolocalización y Opiniones Verificadas
+              </h3>
+              <p className="text-sm text-text-muted mb-4 leading-relaxed">
+                Mapa interactivo de consultorios en el Gran San Miguel de Tucumán y métricas de satisfacción reales post-atención.
+              </p>
+
+              {/* Mini Mapa Interactivo de Tucumán */}
+              <div className="relative h-28 rounded-2xl bg-gradient-to-br from-blue-50 via-teal-50/60 to-background-light border border-gray-200/80 overflow-hidden mb-4 p-3 flex flex-col justify-between">
+                {/* Retícula cartográfica estilizada */}
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-25"
+                  style={{
+                    backgroundImage:
+                      'radial-gradient(#1B4B8C 1px, transparent 1px)',
+                    backgroundSize: '14px 14px',
+                  }}
+                />
+
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-white/90 px-2 py-0.5 rounded-md text-primary shadow-2xs">
+                    Mapa Gran S.M. de Tucumán
+                  </span>
+                  <span className="text-[10px] font-semibold text-text-muted">Clic en cada sede</span>
+                </div>
+
+                <div className="relative z-10 flex flex-wrap gap-1.5">
+                  {SEDES_TUCUMAN.map((sede) => {
+                    const isSelected = selectedMapPin.id === sede.id;
+                    return (
+                      <button
+                        key={sede.id}
+                        type="button"
+                        onClick={() => setSelectedMapPin(sede)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-primary text-white shadow-sm scale-105'
+                            : 'bg-white/90 text-primary border border-gray-200 hover:border-accent'
+                        }`}
+                      >
+                        <MapPin size={11} className={isSelected ? 'text-accent-light' : 'text-accent'} />
+                        <span>{sede.nombre.replace('Policlínico ', '').replace('Centro Médico ', '').replace('Consultorios ', '')}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Barras horizontales de Opiniones Verificadas */}
+              <div className="space-y-2.5 bg-background-light p-3.5 rounded-2xl border border-gray-200/70">
+                <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
+                  <span className="font-bold text-primary">{selectedMapPin.nombre}</span>
+                  <span className="text-[11px] text-text-muted">{selectedMapPin.zona}</span>
+                </div>
+
+                {[
+                  { label: 'Puntualidad en Turnos', value: selectedMapPin.puntualidad },
+                  { label: 'Atención en Recepción', value: selectedMapPin.atencion },
+                  { label: 'Profesionalismo Médico', value: selectedMapPin.profesionalismo },
+                ].map((metric) => (
+                  <div key={metric.label}>
+                    <div className="flex justify-between text-[11px] font-semibold mb-1">
+                      <span className="text-text-main">{metric.label}</span>
+                      <span className="text-primary font-bold">{metric.value}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${metric.value}%` }}
+                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                        className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-text-muted flex justify-between">
+              <span>Solo pacientes con turno atendido</span>
+              <span className="font-bold text-emerald-700">100% Verificadas</span>
+            </div>
+          </motion.article>
+
+        </div>
+      </div>
+    </section>
+  );
+}
